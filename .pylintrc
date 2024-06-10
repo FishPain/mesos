@@ -1,0 +1,12 @@
+[MASTER]
+disable=
+    C0114, # missing-module-docstring
+    C0115, # missing-class-docstring
+    C0116, # missing-function-docstring
+    C0415, # import-outside-toplevel
+    W0703, # broad-except
+    R1710  # inconsistent-return-statements
+
+
+[FORMAT]
+max-line-length=240
