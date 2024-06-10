@@ -3,11 +3,6 @@ FROM python:3.9
 # Set environment variables
 ENV PYTHONUNBUFFERED 1
 
-# use tsinghua pip mirror if server is running in China 
-# if not can comment out this line and pip will use the default
-# pip mirror
-# ENV PIP_INDEX_URL https://pypi.tuna.tsinghua.edu.cn/simple
-
 # tells Flask to look for an application instance named app in the server module 
 ENV FLASK_APP server:app
 
@@ -24,8 +19,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the current directory contents into the container at /app
 COPY . /app/
 
+# Copy supervisord configuration file
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # Expose port
 EXPOSE 5000
 
 # Command to run the application
-CMD ["python", "server.py"]
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

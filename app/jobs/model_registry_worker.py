@@ -1,7 +1,13 @@
 import uuid, os
 from celery import Celery
 from celery import states
-from celery.signals import task_sent, task_success, task_failure, task_prerun, task_postrun
+from celery.signals import (
+    task_sent,
+    task_success,
+    task_failure,
+    task_prerun,
+    task_postrun,
+)
 from app.models.models import MLModel, ModelRegistryModel, UserModel, JobsModel
 from app.constants import InstanceType as instance_type
 from app.constants import SageMakerConstants as sm_constants
@@ -32,6 +38,7 @@ def register_model_worker(model_uuid: str) -> tuple:
 
     return model_uuid, endpoint_name
 
+
 @task_prerun.connect
 def task_prerun_handler(task_id, task, *args, **kwargs):
     # mock session user
@@ -40,13 +47,9 @@ def task_prerun_handler(task_id, task, *args, **kwargs):
         job_uuid=task_id,
         user_uuid=user_uuid,
         job_type="model_registry",
-        job_status=states.PENDING,
+        job_status=states.STARTED,
         reference_uuid=None,
     )
-
-@task_postrun.connect
-def task_postrun_handler(task_id, task, *args, **kwargs):
-    JobsModel.update_task_status(task_id, states.STARTED)
 
 @task_success.connect
 def task_success_handler(sender=None, result=None, *args, **kwargs):

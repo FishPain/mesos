@@ -11,28 +11,8 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      - worker
       - rabbitmq
-    environment:
-      DATABASE_HOST: postgresql
-      DATABASE_PORT: 5432
-      DATABASE_USER: postgresql
-      DATABASE_PASSWORD: postgres_p@ssw0rd
-      DATABASE_NAME: sampledb
-      DATABASE_URI: postgresql://postgresql:postgres_p%40ssw0rd@postgresql:5432/sampledb
-      RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
-      AWS_DEFAULT_REGION: ap-southeast-1
-      SQLALCHEMY_TRACK_MODIFICATIONS: False
-
-  worker:
-    build: 
-      context: ..
-      dockerfile: docker/worker-dockerfile
-    image: ihl-harbor.apps.hackathon.cnasg.dellcsc.com/aai-don/worker:latest
-    volumes:
-      - ../:/app
-    depends_on:
-      - rabbitmq
+      - postgresql
     environment:
       DATABASE_HOST: postgresql
       DATABASE_PORT: 5432
@@ -49,3 +29,12 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+
+  postgresql:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: sampledb
+      POSTGRES_USER: postgresql
+      POSTGRES_PASSWORD: postgres_p@ssw0rd
+    ports:
+      - "5432:5432"
