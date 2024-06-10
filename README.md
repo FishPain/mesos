@@ -2,6 +2,10 @@
 This repository contains the boilerplate for developing Flask REST API services.
 If you use PyCharm as your IDE, it will also load the workspace configuration provided.
 
+RUN docker-compose build
+RUN docker-compose push
+
+
 ## Project structure
 ```
 ├───.github
