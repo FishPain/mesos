@@ -23,7 +23,8 @@ services:
       RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
       AWS_DEFAULT_REGION: ap-southeast-1
       SQLALCHEMY_TRACK_MODIFICATIONS: False
-
+    platform: linux/x86_64
+    
   rabbitmq:
     image: rabbitmq:3-management
     ports:
