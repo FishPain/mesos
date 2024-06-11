@@ -1,6 +1,6 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
-from app.api.model_manager.handler import push_to_s3, download_from_s3
+from app.api.model_manager.handler import save_to_local, get_model_path
 
 ns = Namespace("Model Manager", description="Model management operations")
 
@@ -57,10 +57,14 @@ class ModelManager(Resource):
     @ns.response(200, "Success", get_model_fields)
     def get(self):
         """
-        Get model s3 path by UUID from db
+        Get model path by UUID
         """
         model_uuid = request.args.get("uuid")
-        resp = download_from_s3(model_uuid)
+        try:
+            resp = get_model_path(model_uuid)
+        except Exception as e:
+            return {"message": f"Failed to download the model from S3: {e}"}, 500
+
         return {"message": "Model retrieved successfully", "body": resp}, 200
 
     @ns.expect(upload_parser)
@@ -71,7 +75,8 @@ class ModelManager(Resource):
         """
         uploaded_file = request.files["file"]
         try:
-            resp = push_to_s3(uploaded_file)
+            resp = save_to_local(uploaded_file)
+
         except Exception as e:
             return {"message": f"Failed to upload the model to S3: {e}"}, 500
 

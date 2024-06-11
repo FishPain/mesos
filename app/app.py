@@ -69,11 +69,10 @@ def register_namespaces(app_api):
     from app.api.model_manager.controller import ns as model_manager_namespace
     from app.api.inference.controller import ns as inference_namespace
     from app.api.user.controller import ns as user_namespace
-    from app.api.model_registry.controller import ns as model_registry_namespace
+
 
     app_api.add_namespace(model_manager_namespace, path="/api/model_manager")
     app_api.add_namespace(inference_namespace, path="/api/inference")
     app_api.add_namespace(user_namespace, path="/api/user")
-    app_api.add_namespace(model_registry_namespace, path="/api/model_registry")
 
     # Add more namespaces here

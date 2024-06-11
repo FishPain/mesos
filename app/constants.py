@@ -23,3 +23,11 @@ class InstanceType:
     GPU = "ml.p2.xlarge"
     INFERENCE = "ml.t2.medium"
     LOCAL = "local"
+
+class JobConstants:
+    UPLOAD_MODEL = "upload_model"
+    DOWNLOAD_MODEL = "download_model"
+    TRAIN_MODEL = "train_model"
+    DEPLOY_MODEL = "deploy_model"
+    DELETE_MODEL = "delete_model"
+    START_INFERENCE = "start_inference"

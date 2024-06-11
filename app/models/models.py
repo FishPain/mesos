@@ -12,6 +12,7 @@ Base = declarative_base()
 
 session = sessionmaker(bind=engine)()
 
+
 class UserModel(Base):
     __tablename__ = "user_model"
     user_uuid = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -97,69 +98,6 @@ class MLModel(Base):
         return session.query(MLModel).filter_by(model_uuid=model_uuid).first()
 
 
-class ModelRegistryModel(Base):
-    __tablename__ = "model_registry_model"
-    model_registry_uuid = Column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
-    model_uuid = Column(String(36), ForeignKey("ml_model.model_uuid"), nullable=False)
-    model_version = Column(String(80), nullable=False)
-    model_status = Column(String(80), nullable=False)
-    model_endpoint = Column(String(200), nullable=False)
-
-    def __repr__(self):
-        return f"<ModelRegistry {self.model_registry_uuid}>"
-
-    def __init__(self, model_uuid, model_version, model_status, model_endpoint):
-        self.model_uuid = model_uuid
-        self.model_version = model_version
-        self.model_status = model_status
-        self.model_endpoint = model_endpoint
-
-    @staticmethod
-    def register_model(model_uuid, model_version, model_status, model_endpoint):
-        model = ModelRegistryModel(
-            model_uuid=model_uuid,
-            model_version=model_version,
-            model_status=model_status,
-            model_endpoint=model_endpoint,
-        )
-        session.add(model)
-        session.commit()
-        return model.model_registry_uuid
-
-    @staticmethod
-    def get_record_by_uuid(model_registry_uuid):
-        return (
-            session.query(ModelRegistryModel)
-            .filter_by(model_registry_uuid=model_registry_uuid)
-            .first()
-        )
-
-    @staticmethod
-    def update_record_by_uuid(model_registry_uuid, **kwargs):
-        record = (
-            session.query(ModelRegistryModel)
-            .filter_by(model_registry_uuid=model_registry_uuid)
-            .first()
-        )
-        for key, value in kwargs.items():
-            setattr(record, key, value)
-        session.commit()
-        return record.model_registry_uuid
-
-    @staticmethod
-    def delete_record_by_uuid(model_registry_uuid):
-        record = (
-            session.query(ModelRegistryModel)
-            .filter_by(model_registry_uuid=model_registry_uuid)
-            .first()
-        )
-        session.delete(record)
-        session.commit()
-        return record.model_registry_uuid
-
-
 class InferenceModel(Base):
     __tablename__ = "inference_model"
     inference_uuid = Column(
@@ -173,27 +111,32 @@ class InferenceModel(Base):
     )
     inference_datetime = Column(DateTime, nullable=False, default=datetime.now())
     inference_status = Column(String(80), nullable=False)
+    inference_output = Column(String(200), nullable=True)
 
     def __init__(
         self,
         user_uuid,
         model_registry_uuid,
         inference_status,
+        inference_output=None,
     ):
         self.user_uuid = user_uuid
         self.model_registry_uuid = model_registry_uuid
         self.inference_status = inference_status
+        self.inference_output = inference_output
 
     @staticmethod
     def save_inference_to_db(
         user_uuid,
         model_registry_uuid,
         inference_status,
+        inference_output=None,
     ):
         inference = InferenceModel(
             user_uuid=user_uuid,
             model_registry_uuid=model_registry_uuid,
             inference_status=inference_status,
+            inference_output=inference_output,
         )
         session.add(inference)
         session.commit()
@@ -206,7 +149,7 @@ class InferenceModel(Base):
             .filter_by(inference_uuid=inference_uuid)
             .first()
         )
-    
+
     @staticmethod
     def get_record_by_model_registry_uuid(model_registry_uuid):
         return (
@@ -214,7 +157,7 @@ class InferenceModel(Base):
             .filter_by(model_registry_uuid=model_registry_uuid)
             .first()
         )
-    
+
     @staticmethod
     def delete_record_by_uuid(inference_uuid):
         record = (

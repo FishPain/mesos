@@ -1,32 +1,36 @@
-import os, uuid
+import os
 from werkzeug.datastructures import FileStorage
 
 from app.core.SagemakerManager import SagemakerManager
 from app.constants import SageMakerConstants as sm_constants
 from app.constants import AppConstants as app_constants
 from app.models.models import MLModel
+from app.jobs.upload_model_worker import upload_model
 
 
-def download_from_s3(model_uuid: str) -> dict:
-    bucket_name = sm_constants.BUCKET_NAME
-    role = sm_constants.ROLE
-    sm = SagemakerManager(bucket_name, role)
+def get_model_path(model_uuid: str) -> dict:
+    model = MLModel.get_record_by_uuid(model_uuid)
+    if not model:
+        raise Exception("Model does not exist")
 
-    try:
-        s3_file_path = MLModel.get_record_by_uuid(model_uuid).s3_url
-
-        # Download the model from S3
-        local_filepath_list = sm.download_from_s3(s3_file_path)
-        resp = {
-            "uuid": model_uuid,
-            "local_filepath_list": local_filepath_list,
-        }
-
-    except Exception as e:
-        raise Exception(f"Failed to download the model from S3: {e}")
+    resp = {
+        "uuid": model_uuid,
+        "local_filepath_list": [model.s3_url],
+    }
 
     return resp
 
+def save_to_local(model: FileStorage) -> dict:
+    if not (model):
+        raise Exception("Invalid file format. Please upload a tar.gz file")
+    
+    result = upload_model.apply_async(args=[model])
+
+    resp = {
+        "uuid": result.task_id
+    }
+
+    return resp
 
 def push_to_s3(model: FileStorage) -> dict:
     bucket_name = sm_constants.BUCKET_NAME
