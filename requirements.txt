@@ -16,7 +16,10 @@ psycopg2-binary
 celery
 supervisor
 ultralytics==8.2.2
-pytesseract
+easyocr
+protobuf~=3.20
+paddlepaddle
+paddleocr
 # PyTorch with CUDA compatibility 
 # torch==2.2.2+cu121 -f https://download.pytorch.org/whl/torch_stable.html
 
