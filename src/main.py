@@ -1,9 +1,6 @@
 import cv2
 import os
-import torch
 from ultralytics import YOLO
-from collections import defaultdict
-import numpy as np
 from paddleocr import PaddleOCR
 import json
 import boto3
@@ -19,14 +16,9 @@ def upload_video_to_s3(bucket_name, video_path, s3_key):
     s3.upload_file(video_path, bucket_name, s3_key)
 
 
-def store_plate_numbers_with_info(
-    plate_numbers_with_info, consistent_plates, storage_path
-):
+def store_plate_numbers_with_info(plate_numbers_with_info, storage_path):
     os.makedirs(os.path.dirname(storage_path), exist_ok=True)
-    data_to_store = {
-        "plate_numbers": plate_numbers_with_info,
-        "consistent_plates": consistent_plates,
-    }
+    data_to_store = {"plate_numbers": plate_numbers_with_info}
     with open(storage_path, "w") as f:
         json.dump(data_to_store, f, indent=4)
 
@@ -37,14 +29,13 @@ def detect_car_plates_yolov8(
     model_path,
     display_real_time=False,
     output_fps=None,
-    duration_threshold=30,
-    confidence_threshold=0.75,
+    confidence_threshold=0.95,
     upload_to_s3=False,
     bucket_name=None,
     s3_key=None,
 ):
     model = YOLO(model_path)
-    ocr = PaddleOCR(use_angle_cls=True, lang="en")
+    ocr = PaddleOCR(use_angle_cls=True, lang="en", show_log=False)
     cap = cv2.VideoCapture(video_path)
     frame_width = int(cap.get(3))
     frame_height = int(cap.get(4))
@@ -60,11 +51,8 @@ def detect_car_plates_yolov8(
         return
 
     frame_info = []
-    plate_tracks = defaultdict(list)
-    plate_ids = {}
     plate_numbers_with_info = []
     frame_count = 0
-
     # Calculate the detection area
     detection_area = {
         "x": frame_width * 0.25,
@@ -106,11 +94,13 @@ def detect_car_plates_yolov8(
                     )
                     if conf < confidence_threshold:
                         continue
+
                     plate_numbers_with_info.append(
                         {
                             "frame_number": frame_count,
                             "bounding_box": (x, y, w, h),
                             "plate_number": plate_number,
+                            "confidence": conf,
                         }
                     )
                     frame_info.append(
@@ -131,14 +121,6 @@ def detect_car_plates_yolov8(
                         f"Bounding box drawn: ({x}, {y}), ({x + w}, {y + h}), Text: {plate_number}"
                     )
 
-        # Track plates over frames
-        for x, y, w, h in current_frame_plates:
-            plate_id = find_plate_id(plate_ids, x, y, w, h)
-            if plate_id is None:
-                plate_id = len(plate_ids)
-                plate_ids[plate_id] = (x, y, w, h)
-            plate_tracks[plate_id].append(frame_count)
-
         # Display the frame if the toggle is enabled
         if display_real_time:
             cv2.imshow("License Plate Detection", frame)
@@ -153,13 +135,6 @@ def detect_car_plates_yolov8(
     if display_real_time:
         cv2.destroyAllWindows()
 
-    # Identify plates in view for at least duration_threshold seconds
-    consistent_plates = [
-        plate_id
-        for plate_id, frames in plate_tracks.items()
-        if len(frames) >= duration_threshold * source_fps
-    ]
-
     # Upload the video to S3 if required
     if upload_to_s3 and bucket_name and s3_key:
         upload_video_to_s3(bucket_name, output_video_path, s3_key)
@@ -167,7 +142,7 @@ def detect_car_plates_yolov8(
     else:
         print(f"Video saved locally: {output_video_path}")
 
-    return plate_numbers_with_info, consistent_plates
+    return plate_numbers_with_info
 
 
 def find_plate_id(plate_ids, x, y, w, h, iou_threshold=0.5):
@@ -211,13 +186,12 @@ if __name__ == "__main__":
     # download_video_from_s3(bucket_name, video_key, download_path)
 
     # Step 2: Detect car plates and draw bounding boxes using YOLOv8
-    plate_numbers_with_info, consistent_plates = detect_car_plates_yolov8(
+    plate_numbers_with_info = detect_car_plates_yolov8(
         download_path,
         output_video_path,
         model_path,
         display_real_time,
         output_fps,
-        duration_threshold,
         confidence_threshold,
         upload_to_s3,
         bucket_name,
@@ -225,6 +199,4 @@ if __name__ == "__main__":
     )
 
     # Step 3: Store the plate numbers with frame information
-    store_plate_numbers_with_info(
-        plate_numbers_with_info, consistent_plates, storage_path
-    )
+    store_plate_numbers_with_info(plate_numbers_with_info, storage_path)
