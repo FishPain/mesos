@@ -14,7 +14,7 @@ COPY requirements.txt /app/
 COPY /libs/ /app/libs/
 
 # Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --retries 3 --timeout 60 -r requirements.txt 
 
 # Copy the current directory contents into the container at /app
 COPY . /app/
