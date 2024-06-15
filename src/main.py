@@ -19,7 +19,9 @@ def upload_video_to_s3(bucket_name, video_path, s3_key):
     s3.upload_file(video_path, bucket_name, s3_key)
 
 
-def store_plate_numbers_with_info(plate_numbers_with_info, consistent_plates, storage_path):
+def store_plate_numbers_with_info(
+    plate_numbers_with_info, consistent_plates, storage_path
+):
     os.makedirs(os.path.dirname(storage_path), exist_ok=True)
     data_to_store = {
         "plate_numbers": plate_numbers_with_info,
@@ -39,7 +41,7 @@ def detect_car_plates_yolov8(
     confidence_threshold=0.75,
     upload_to_s3=False,
     bucket_name=None,
-    s3_key=None
+    s3_key=None,
 ):
     model = YOLO(model_path)
     ocr = PaddleOCR(use_angle_cls=True, lang="en")
@@ -56,7 +58,7 @@ def detect_car_plates_yolov8(
     if not out.isOpened():
         print(f"Error: Could not open output video file {output_video_path}")
         return
-    
+
     frame_info = []
     plate_tracks = defaultdict(list)
     plate_ids = {}
@@ -65,12 +67,12 @@ def detect_car_plates_yolov8(
 
     # Calculate the detection area
     detection_area = {
-        "x": frame_width // 2 - 200,
+        "x": frame_width * 0.25,
         "y": 0,
-        "width": 400,
-        "height": frame_height
+        "width": (frame_width * 0.75) - (frame_width * 0.25),
+        "height": frame_height,
     }
-    
+
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -81,9 +83,6 @@ def detect_car_plates_yolov8(
         for result in results:
             for detection in result.boxes:
                 x1, y1, x2, y2 = detection.xyxy[0]
-                conf = detection.confidence
-                if conf < confidence_threshold:
-                    continue
                 x, y, w, h = int(x1), int(y1), int(x2 - x1), int(y2 - y1)
                 if (
                     x > detection_area["x"]
@@ -95,12 +94,18 @@ def detect_car_plates_yolov8(
                     plate_frame = frame[y : y + h, x : x + w]
 
                     # Resize the frame to speed up OCR
-                    plate_frame_resized = cv2.resize(plate_frame, (0, 0), fx=0.5, fy=0.5)
+                    plate_frame_resized = cv2.resize(
+                        plate_frame, (0, 0), fx=0.5, fy=0.5
+                    )
 
                     ocr_result = ocr.ocr(plate_frame_resized, cls=True)
-                    plate_number = ""
-                    if ocr_result and len(ocr_result[0]) > 0:
-                        plate_number, conf = ocr_result[0][0][1]
+                    plate_number, conf = (
+                        ocr_result[0][0][1]
+                        if ocr_result and ocr_result[0] and len(ocr_result[0]) > 0
+                        else ("", 0)
+                    )
+                    if conf < confidence_threshold:
+                        continue
                     plate_numbers_with_info.append(
                         {
                             "frame_number": frame_count,
@@ -192,7 +197,7 @@ if __name__ == "__main__":
     bucket_name = "your-bucket-name"
     video_key = "path/to/your/s3/video.mp4"
     download_path = "models/video.mp4"
-    output_video_path = "run/output/annotated_video.mp4"
+    output_video_path = "run/annotated_video.mp4"
     storage_path = "run/plate_numbers_with_info.json"
     model_path = "models/lpd.pt"
     duration_threshold = 30  # seconds
@@ -216,7 +221,7 @@ if __name__ == "__main__":
         confidence_threshold,
         upload_to_s3,
         bucket_name,
-        s3_key
+        s3_key,
     )
 
     # Step 3: Store the plate numbers with frame information
