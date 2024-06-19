@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Vehicle Alert</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #333;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #444;
+            padding: 20px;
+            border-radius: 10px;
+            width: 600px;
+        }
+
+        .alert {
+            font-size: 2em;
+        }
+
+        .lane {
+            color: orange;
+            font-size: 1.5em;
+        }
+
+        .icon {
+            margin-top: 20px;
+        }
+
+        .arrows {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .arrows i {
+            font-size: 2em;
+            margin: 0 10px;
+        }
+
+        .right-arrow {
+            color: orange;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="alert">Emergency Vehicle In Coming 400m</div>
+        <div class="lane">Lane 1</div>
+        <div class="icon">
+            <i class="fas fa-ambulance"></i>
+        </div>
+        <div class="arrows">
+            <i class="fas fa-arrow-left"></i>
+            <i class="fas fa-arrow-up"></i>
+            <i class="fas fa-arrow-up"></i>
+            <i class="fas fa-arrow-up"></i>
+            <i class="fas fa-arrow-right right-arrow"></i>
+        </div>
+    </div>
+</body>
+
+</html>

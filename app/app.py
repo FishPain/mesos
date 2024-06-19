@@ -1,17 +1,15 @@
 import json, os
 
-from flask import Flask, Blueprint
+from flask import Flask, Blueprint, render_template
+
 from flask_cors import CORS
 from flask_restx import Api
-
-from celery import Celery
 
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.constants import AppConstants as app_constants
-from app.constants import SageMakerConstants as sm_constants
-from app.core.SagemakerManager import SagemakerManager
+
 
 def init_app():
     """Spawns the application"""
@@ -61,17 +59,19 @@ def init_app():
         }
         return data, err.code
 
+    # Add route for the HTML page
+    @app.route("/")
+    def index():
+        return render_template("index.html")
+    
     return app
 
 
 def register_namespaces(app_api):
     """Adds the namespaces to the application"""
-    from app.api.model_manager.controller import ns as model_manager_namespace
     from app.api.inference.controller import ns as inference_namespace
     from app.api.user.controller import ns as user_namespace
 
-
-    app_api.add_namespace(model_manager_namespace, path="/api/model_manager")
     app_api.add_namespace(inference_namespace, path="/api/inference")
     app_api.add_namespace(user_namespace, path="/api/user")
 

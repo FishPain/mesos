@@ -8,9 +8,8 @@ from celery.signals import (
 )
 from app.models.models import UserModel, JobsModel, InferenceModel
 from app.constants import JobConstants as job_constants
-from app.core.InferenceManager import image_preprocessor
+from app.core.InferenceManager import InferenceManager
 from dotenv import load_dotenv
-from werkzeug.datastructures import FileStorage
 
 load_dotenv()
 
@@ -19,11 +18,12 @@ broker_url = os.getenv("RABBITMQ_URI")
 
 worker = Celery("inference_worker", broker=broker_url)
 
+inference_manager = InferenceManager()
+
+
 @worker.task
-def start_inference(model: FileStorage, image: FileStorage) -> tuple:
-    data = image_preprocessor(image)
-    resp = model.predict(data)
-    return resp
+def start_inference() -> tuple:
+    return inference_manager.detect_car_plates_yolov8()
 
 
 @task_prerun.connect
@@ -46,9 +46,8 @@ def task_success_handler(sender=None, result=None, *args, **kwargs):
 
     model_uuid = InferenceModel.save_inference_to_db(
         user_uuid=user_uuid,
-        model_registry_uuid = model_uuid,
         inference_status=states.SUCCESS,
-        inference_output=result
+        inference_output=result,
     )
     JobsModel.update_task_status(task_id, states.SUCCESS)
 

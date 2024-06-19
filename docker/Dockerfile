@@ -9,6 +9,12 @@ ENV FLASK_APP server:app
 # Set working directory
 WORKDIR /app
 
+# Install necessary system dependencies
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+    
 # Copy requirements.txt to the working directory
 COPY requirements.txt /app/
 COPY /libs/ /app/libs/

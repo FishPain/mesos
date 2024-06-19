@@ -1,8 +1,6 @@
-from datetime import datetime, timezone
-import requests
+from datetime import datetime
 import hashlib
 import hmac
-import json
 import os
 
 

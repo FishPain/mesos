@@ -58,57 +58,12 @@ class UserModel(Base):
     def get_user_record_by_uuid(user_uuid):
         return session.query(UserModel).filter_by(user_uuid=user_uuid).first()
 
-
-class MLModel(Base):
-    __tablename__ = "ml_model"
-    model_uuid = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_uuid = Column(String(36), ForeignKey("user_model.user_uuid"), nullable=False)
-    upload_datetime = Column(DateTime, nullable=False, default=datetime.now())
-    model_name = Column(String(80), nullable=True)
-    model_type = Column(String(80), nullable=True)
-    s3_url = Column(String(200), unique=True, nullable=False)
-
-    def __init__(self, user_uuid, model_name, model_type, s3_url):
-        self.user_uuid = user_uuid
-        self.model_name = model_name
-        self.model_type = model_type
-        self.s3_url = s3_url
-
-    def __repr__(self):
-        return f"<MLModel {self.model_uuid}>"
-
-    @staticmethod
-    def save_model_to_db(model_name, model_type, s3_url):
-        dummy_user_uuid = UserModel.get_user_uuid_by_email("dummyUser@dummy.com")
-        if dummy_user_uuid is None:
-            raise Exception("User does not exist")
-
-        model = MLModel(
-            user_uuid=dummy_user_uuid,
-            model_name=model_name,
-            model_type=model_type,
-            s3_url=s3_url,
-        )
-        session.add(model)
-        session.commit()
-        return model.model_uuid
-
-    @staticmethod
-    def get_record_by_uuid(model_uuid):
-        return session.query(MLModel).filter_by(model_uuid=model_uuid).first()
-
-
 class InferenceModel(Base):
     __tablename__ = "inference_model"
     inference_uuid = Column(
         String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     user_uuid = Column(String(36), ForeignKey("user_model.user_uuid"), nullable=False)
-    model_registry_uuid = Column(
-        String(36),
-        ForeignKey("model_registry_model.model_registry_uuid"),
-        nullable=False,
-    )
     inference_datetime = Column(DateTime, nullable=False, default=datetime.now())
     inference_status = Column(String(80), nullable=False)
     inference_output = Column(String(200), nullable=True)
@@ -116,25 +71,21 @@ class InferenceModel(Base):
     def __init__(
         self,
         user_uuid,
-        model_registry_uuid,
         inference_status,
         inference_output=None,
     ):
         self.user_uuid = user_uuid
-        self.model_registry_uuid = model_registry_uuid
         self.inference_status = inference_status
         self.inference_output = inference_output
 
     @staticmethod
     def save_inference_to_db(
         user_uuid,
-        model_registry_uuid,
         inference_status,
         inference_output=None,
     ):
         inference = InferenceModel(
             user_uuid=user_uuid,
-            model_registry_uuid=model_registry_uuid,
             inference_status=inference_status,
             inference_output=inference_output,
         )
@@ -151,14 +102,6 @@ class InferenceModel(Base):
         )
 
     @staticmethod
-    def get_record_by_model_registry_uuid(model_registry_uuid):
-        return (
-            session.query(InferenceModel)
-            .filter_by(model_registry_uuid=model_registry_uuid)
-            .first()
-        )
-
-    @staticmethod
     def delete_record_by_uuid(inference_uuid):
         record = (
             session.query(InferenceModel)
@@ -171,7 +114,6 @@ class InferenceModel(Base):
 
     def __repr__(self):
         return f"<InferenceModel {self.inference_uuid}>"
-
 
 class JobsModel(Base):
     __tablename__ = "jobs_model"
