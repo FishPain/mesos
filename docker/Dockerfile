@@ -27,6 +27,7 @@ COPY . /app/
 
 # Copy supervisord configuration file
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # Expose port
 EXPOSE 5000
 
