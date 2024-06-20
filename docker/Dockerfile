@@ -10,7 +10,8 @@ WORKDIR /app
 # Install necessary system dependencies
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
-    libglib2.0-0
+    libglib2.0-0 \
+    ffmpeg
 
 # Copy requirements.txt to the working directory
 COPY requirements.txt /app/
@@ -26,7 +27,6 @@ COPY . /app/
 
 # Copy supervisord configuration file
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
 # Expose port
 EXPOSE 5000
 

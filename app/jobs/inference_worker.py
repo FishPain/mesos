@@ -9,7 +9,7 @@ from celery.signals import (
 )
 from app.models.models import UserModel, JobsModel, InferenceModel
 from app.constants import JobConstants as job_constants
-from app.core.InferenceManager import InferenceManager
+from app.constants import AppConstants as app_constants
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,13 +19,16 @@ broker_url = os.getenv("RABBITMQ_URI")
 
 worker = Celery("inference_worker", broker=broker_url)
 
-inference_manager = InferenceManager()
-
 
 @worker.task(bind=True)
-def start_inference(self) -> tuple:
-    # get the task id here
-    return inference_manager.detect_car_plates_yolov8(self.request.id)
+def start_inference(self, temp_uuid) -> tuple:
+    from app.core.InferenceManager import InferenceManager
+    inference_manager = InferenceManager()
+    task_id = self.request.id
+    temp_file_path = f"{app_constants.VIDEO_DOWNLOAD_TEMP_DIR}/{temp_uuid}.mp4"
+    new_file_path = f"{app_constants.VIDEO_DOWNLOAD_TEMP_DIR}/{task_id}.mp4"
+    os.rename(temp_file_path, new_file_path)
+    return inference_manager.detect_car_plates_yolov8(task_id)
 
 
 @task_prerun.connect

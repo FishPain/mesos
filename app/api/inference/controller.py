@@ -71,8 +71,10 @@ class Inference(Resource):
             os.makedirs(
                 os.path.dirname(app_constants.VIDEO_DOWNLOAD_TEMP_DIR), exist_ok=True
             )
-            resp = start_inference_by_model_uuid()
-            file.save(f"{app_constants.VIDEO_DOWNLOAD_TEMP_DIR}/{resp.get('uuid')}.mp4")
+            temp_uuid = str(uuid.uuid4())
+            temp_file_path = f"{app_constants.VIDEO_DOWNLOAD_TEMP_DIR}/{temp_uuid}.mp4"
+            file.save(temp_file_path)
+            resp = start_inference_by_model_uuid(temp_uuid)
             response_data = {
                 "message": "Inference job posted successfully",
                 "body": resp,

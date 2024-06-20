@@ -5,7 +5,8 @@ flask~=3.0
 flask-cors
 flask-restx
 gunicorn
-numpy~=2.0.0
+# numpy must be 1.x
+numpy~=1.26
 paddlepaddle
 paddleocr
 protobuf~=3.20
@@ -13,7 +14,7 @@ psycopg2-binary
 python-dotenv
 requests~=2.28.1
 sqlalchemy
-supervisor
+supervisor~=4.2
 urllib3~=1.26.12
 ultralytics==8.2.2
 werkzeug~=3.0

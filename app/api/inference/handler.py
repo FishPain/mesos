@@ -5,8 +5,8 @@ from celery import states
 import json
 
 
-def start_inference_by_model_uuid():
-    result = start_inference.apply_async()
+def start_inference_by_model_uuid(temp_uuid):
+    result = start_inference.apply_async(args=[temp_uuid])
     resp = {"uuid": result.task_id}
     return resp
 

@@ -4,6 +4,9 @@ from ultralytics import YOLO
 from paddleocr import PaddleOCR
 import boto3
 from app.constants import AppConstants as app_constants
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class InferenceManager:
@@ -15,7 +18,7 @@ class InferenceManager:
         self.storage_path = app_constants.DATA_UPLOAD_TEMP_DIR
         self.model_path = app_constants.MODEL_UPLOAD_TEMP_DIR
         self.display_real_time = False  # Set to True to enable real-time display
-        self.confidence_threshold = 0.95  # Confidence threshold for detections
+        self.confidence_threshold = 0.5  # Confidence threshold for detections
         self.upload_to_s3 = True  # Set to True to upload video to S3
 
         os.makedirs(os.path.dirname(self.disk_download_path), exist_ok=True)
@@ -23,33 +26,47 @@ class InferenceManager:
         os.makedirs(os.path.dirname(self.storage_path), exist_ok=True)
 
         self.model = YOLO(self.model_path)
-        self.ocr = PaddleOCR(use_angle_cls=True, lang="en", show_log=False)
+        self.ocr = PaddleOCR(
+            use_angle_cls=True,
+            lang="en",
+            show_log=False,
+        )
 
     def detect_car_plates_yolov8(self, inference_uuid):
+        logger.info(f"Processing video {inference_uuid}.mp4")
         cap = cv2.VideoCapture(f"{self.disk_download_path}/{inference_uuid}.mp4")
-        frame_width = int(cap.get(3))
-        frame_height = int(cap.get(4))
+        if not cap.isOpened():
+            logger.error(
+                f"Error: Could not open video file {self.disk_download_path}/{inference_uuid}.mp4"
+            )
+            return
+
+        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         source_fps = int(cap.get(cv2.CAP_PROP_FPS))
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        output_video_path = f"{self.disk_upload_path}/{inference_uuid}.mp4"
         out = cv2.VideoWriter(
-            f"{self.disk_upload_path}/{inference_uuid}.mp4",
+            output_video_path,
             fourcc,
             source_fps,
             (frame_width, frame_height),
         )
 
         if not out.isOpened():
-            print(f"Error: Could not open output video file {self.disk_upload_path}")
+            logger.error(
+                f"Error: Could not open output video file {self.disk_upload_path}/{inference_uuid}.mp4"
+            )
             return
 
         frame_info = []
         plate_numbers_with_info = []
         frame_count = 0
-        # Calculate the detection area
+
         detection_area = {
-            "x": frame_width * 0.25,
+            "x": 0,
             "y": 0,
-            "width": (frame_width * 0.75) - (frame_width * 0.25),
+            "width": frame_width,
             "height": frame_height,
         }
 
@@ -73,11 +90,9 @@ class InferenceManager:
                         current_frame_plates.append((x, y, w, h))
                         plate_frame = frame[y : y + h, x : x + w]
 
-                        # Resize the frame to speed up OCR
                         plate_frame_resized = cv2.resize(
                             plate_frame, (0, 0), fx=0.5, fy=0.5
                         )
-
                         ocr_result = self.ocr.ocr(plate_frame_resized, cls=True)
                         plate_number, conf = (
                             ocr_result[0][0][1]
@@ -98,7 +113,6 @@ class InferenceManager:
                         frame_info.append(
                             {"frame_number": frame_count, "bounding_box": (x, y, w, h)}
                         )
-                        # Draw bounding box and text on the frame
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
                         cv2.putText(
                             frame,
@@ -109,14 +123,14 @@ class InferenceManager:
                             (255, 0, 0),
                             2,
                         )
-                        print(
+                        logger.info(
                             f"Bounding box drawn: ({x}, {y}), ({x + w}, {y + h}), Text: {plate_number}"
                         )
 
-            # Display the frame if the toggle is enabled
             if self.display_real_time:
                 cv2.imshow("License Plate Detection", frame)
                 if cv2.waitKey(1) & 0xFF == ord("q"):
+                    logger.info(f"User interrupted the process")
                     break
 
             out.write(frame)
@@ -126,8 +140,11 @@ class InferenceManager:
         out.release()
         if self.display_real_time:
             cv2.destroyAllWindows()
+        
+        self.__reencode_video_ffmpeg(output_video_path,output_video_path)
+
         self.__upload_video_to_s3(inference_uuid)
-        print(
+        logger.info(
             f"Video uploaded to s3://{self.bucket_name}/{self.s3_upload_path}/{inference_uuid}.mp4"
         )
         response = {
@@ -136,15 +153,26 @@ class InferenceManager:
         }
         return response
 
-    def __upload_video_to_s3(self, inference_uuid):
+    def __upload_video_to_s3(self, inference_uuid, output_video_path):
         s3 = boto3.client("s3")
         s3.upload_file(
-            f"{self.disk_upload_path}/{inference_uuid}.mp4",
+            output_video_path,
             self.bucket_name,
             f"{self.s3_upload_path}/{inference_uuid}.mp4",
         )
-
-
-if __name__ == "__main__":
-    inference_manager = InferenceManager()
-    inference_manager.detect_car_plates_yolov8("c6213328-da58-4cea-ab60-ac855da69fb6")
+        os.remove(output_video_path)
+    
+    def __reencode_video_ffmpeg(self, input_path, output_path):
+        import subprocess
+        command = [
+            'ffmpeg',
+            '-i', input_path,
+            '-c:v', 'libx264',
+            '-crf', '23',
+            '-preset', 'fast',
+            '-c:a', 'aac',
+            '-b:a', '128k',
+            '-movflags', '+faststart',
+            output_path
+        ]
+        subprocess.run(command, check=True)
