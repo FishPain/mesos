@@ -1,6 +1,12 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
-from app.api.inference.handler import start_inference_by_model_uuid
+from app.api.inference.handler import (
+    start_inference_by_model_uuid,
+    get_inference_by_uuid,
+)
+from app.constants import AppConstants as app_constants
+import os
+import uuid
 
 ns = Namespace("Inference", description="Inference operations")
 
@@ -9,13 +15,11 @@ get_parser.add_argument("uuid", type=str, required=True, help="The inference UUI
 
 upload_parser = ns.parser()
 upload_parser.add_argument(
-    "inference_data", location="files", type="file", required=True, help="A json file"
-)
-upload_parser.add_argument(
-    "uuid",
-    type=str,
+    "inference_data",
+    location="files",
+    type="FileStorage",
     required=True,
-    help="The model registry UUID",
+    help="File containing inference data",
 )
 
 delete_parser = ns.parser()
@@ -46,33 +50,35 @@ class Inference(Resource):
     def get(self):
         """Get inference result by inference id"""
         inference_uuid = request.args.get("uuid")
+        resp = get_inference_by_uuid(inference_uuid)
         inference_result = {
             "inference_uuid": inference_uuid,
-            "status": "completed",
-            "inference": "This is a dummy inference result",
+            "status": resp.get("status"),
+            "inference": resp.get("inference_result"),
         }
         return {
             "message": "Inference Results retrieved successfully",
             "inference_result": inference_result,
         }, 200
 
-    # flask status code 200
     @ns.expect(upload_parser)
     @ns.response(200, "Success", inference_model)
     def post(self):
         """Post an inference job"""
-        # Process the JSON data here
-        # You can perform any required operations
-        # json data in the format of {"inputs": ndarray.tolist()}
-        json_data = request.files.get("inference_data")
-        model_uuid = request.args.get("uuid")
-        resp = start_inference_by_model_uuid(model_uuid, json_data)
-        
-        response_data = {
-            "message": "Inference job posted successfully",
-            "body": resp
-        }
-        return response_data, 200
+        file = request.files.get("inference_data")
+
+        if file:
+            os.makedirs(
+                os.path.dirname(app_constants.VIDEO_DOWNLOAD_TEMP_DIR), exist_ok=True
+            )
+            resp = start_inference_by_model_uuid()
+            file.save(f"{app_constants.VIDEO_DOWNLOAD_TEMP_DIR}/{resp.get('uuid')}.mp4")
+            response_data = {
+                "message": "Inference job posted successfully",
+                "body": resp,
+            }
+            return response_data, 200
+        return {"message": "No file provided"}, 400
 
     @ns.expect(delete_parser)
     @ns.response(200, "Success")

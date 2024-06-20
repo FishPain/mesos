@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video with Hotspots</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+        }
+
+        #hotspots {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <video id="videoPlayer" controls>
+            <source src="http://localhost:5000/v1/api/video/preprocessed" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div id="hotspots">
+            <button onclick="jumpTo(10)">Jump to 00:10</button>
+            <button onclick="jumpTo(30)">Jump to 00:30</button>
+            <button onclick="jumpTo(60)">Jump to 01:00</button>
+        </div>
+    </div>
+    <script>
+        function jumpTo(time) {
+            const videoPlayer = document.getElementById('videoPlayer');
+            videoPlayer.currentTime = time;
+            videoPlayer.play();
+        }
+    </script>
+</body>
+
+</html>

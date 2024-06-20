@@ -63,7 +63,11 @@ def init_app():
     @app.route("/")
     def index():
         return render_template("index.html")
-    
+
+    @app.route("/management")
+    def console():
+        return render_template("console.html")
+
     return app
 
 
@@ -71,8 +75,12 @@ def register_namespaces(app_api):
     """Adds the namespaces to the application"""
     from app.api.inference.controller import ns as inference_namespace
     from app.api.user.controller import ns as user_namespace
+    from app.api.erp.controller import ns as erp_namespace
+    from app.api.video.controller import ns as video_namespace
 
     app_api.add_namespace(inference_namespace, path="/api/inference")
     app_api.add_namespace(user_namespace, path="/api/user")
+    app_api.add_namespace(erp_namespace, path="/api/erp")
+    app_api.add_namespace(video_namespace, path="/api/video")
 
     # Add more namespaces here

@@ -12,12 +12,10 @@ WORKDIR /app
 # Install necessary system dependencies
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
-    libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
+    libglib2.0-0
     
 # Copy requirements.txt to the working directory
 COPY requirements.txt /app/
-COPY /libs/ /app/libs/
 
 # Install dependencies
 RUN pip install --no-cache-dir --retries 3 --timeout 60 -r requirements.txt 

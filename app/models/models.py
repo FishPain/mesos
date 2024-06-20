@@ -3,7 +3,7 @@ from datetime import datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, String, DateTime, ForeignKey, JSON
 
 
 engine = create_engine(os.getenv("DATABASE_URI"))
@@ -58,6 +58,7 @@ class UserModel(Base):
     def get_user_record_by_uuid(user_uuid):
         return session.query(UserModel).filter_by(user_uuid=user_uuid).first()
 
+
 class InferenceModel(Base):
     __tablename__ = "inference_model"
     inference_uuid = Column(
@@ -66,25 +67,29 @@ class InferenceModel(Base):
     user_uuid = Column(String(36), ForeignKey("user_model.user_uuid"), nullable=False)
     inference_datetime = Column(DateTime, nullable=False, default=datetime.now())
     inference_status = Column(String(80), nullable=False)
-    inference_output = Column(String(200), nullable=True)
+    inference_output = Column(JSON, nullable=True)
 
     def __init__(
         self,
+        inference_uuid,
         user_uuid,
         inference_status,
         inference_output=None,
     ):
+        self.inference_uuid = inference_uuid
         self.user_uuid = user_uuid
         self.inference_status = inference_status
         self.inference_output = inference_output
 
     @staticmethod
     def save_inference_to_db(
+        inference_uuid,
         user_uuid,
         inference_status,
         inference_output=None,
     ):
         inference = InferenceModel(
+            inference_uuid=inference_uuid,
             user_uuid=user_uuid,
             inference_status=inference_status,
             inference_output=inference_output,
@@ -100,7 +105,28 @@ class InferenceModel(Base):
             .filter_by(inference_uuid=inference_uuid)
             .first()
         )
-
+    
+    @staticmethod
+    def update_inference_status(inference_uuid, inference_status):
+        record = (
+            session.query(InferenceModel)
+            .filter_by(inference_uuid=inference_uuid)
+            .first()
+        )
+        record.inference_status = inference_status
+        session.commit()
+        return record.inference_uuid
+    
+    def update_inference_output(inference_uuid, inference_output):
+        record = (
+            session.query(InferenceModel)
+            .filter_by(inference_uuid=inference_uuid)
+            .first()
+        )
+        record.inference_output = inference_output
+        session.commit()
+        return record.inference_uuid
+    
     @staticmethod
     def delete_record_by_uuid(inference_uuid):
         record = (
@@ -114,6 +140,7 @@ class InferenceModel(Base):
 
     def __repr__(self):
         return f"<InferenceModel {self.inference_uuid}>"
+
 
 class JobsModel(Base):
     __tablename__ = "jobs_model"

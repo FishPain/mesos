@@ -2,22 +2,19 @@ import cv2
 import os
 from ultralytics import YOLO
 from paddleocr import PaddleOCR
-import json
 import boto3
 from app.constants import AppConstants as app_constants
 
 
 class InferenceManager:
     def __init__(self):
-        self.bucket_name = "your-bucket-name"
-        self.s3_download_path = "path/to/your/s3/video.mp4"
-        self.s3_upload_path = "path/to/your/s3/output_video.mp4"
+        self.bucket_name = os.getenv("BUCKET_NAME")
+        self.s3_upload_path = "mesos"
         self.disk_download_path = app_constants.VIDEO_DOWNLOAD_TEMP_DIR
         self.disk_upload_path = app_constants.VIDEO_UPLOAD_TEMP_DIR
         self.storage_path = app_constants.DATA_UPLOAD_TEMP_DIR
-        self.model_path = "model_resources/lpd.pt"
+        self.model_path = app_constants.MODEL_UPLOAD_TEMP_DIR
         self.display_real_time = False  # Set to True to enable real-time display
-        self.output_fps = None
         self.confidence_threshold = 0.95  # Confidence threshold for detections
         self.upload_to_s3 = True  # Set to True to upload video to S3
 
@@ -28,16 +25,17 @@ class InferenceManager:
         self.model = YOLO(self.model_path)
         self.ocr = PaddleOCR(use_angle_cls=True, lang="en", show_log=False)
 
-    def detect_car_plates_yolov8(self):
-        self.__download_video_from_s3()
-        cap = cv2.VideoCapture(self.disk_download_path)
+    def detect_car_plates_yolov8(self, inference_uuid):
+        cap = cv2.VideoCapture(f"{self.disk_download_path}/{inference_uuid}.mp4")
         frame_width = int(cap.get(3))
         frame_height = int(cap.get(4))
         source_fps = int(cap.get(cv2.CAP_PROP_FPS))
-        output_fps = output_fps or source_fps
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         out = cv2.VideoWriter(
-            self.disk_upload_path, fourcc, output_fps, (frame_width, frame_height)
+            f"{self.disk_upload_path}/{inference_uuid}.mp4",
+            fourcc,
+            source_fps,
+            (frame_width, frame_height),
         )
 
         if not out.isOpened():
@@ -128,36 +126,25 @@ class InferenceManager:
         out.release()
         if self.display_real_time:
             cv2.destroyAllWindows()
-
-        # Upload the video to S3 if required
-        if self.upload_to_s3 and self.bucket_name and self.s3_upload_path:
-            self.__upload_video_to_s3()
-            print(
-                f"Video uploaded to S3: s3://{self.bucket_name}/{self.s3_upload_path}"
-            )
-        else:
-            print(f"Video saved locally: {self.disk_upload_path}")
-
-        self.__store_plate_numbers_with_info(plate_numbers_with_info, self.storage_path)
-
+        self.__upload_video_to_s3(inference_uuid)
+        print(
+            f"Video uploaded to s3://{self.bucket_name}/{self.s3_upload_path}/{inference_uuid}.mp4"
+        )
         response = {
-            "output_video_path": f"s3://{self.bucket_name}/{self.s3_upload_path}",
+            "output_video_path": f"s3://{self.bucket_name}/{self.s3_upload_path}/{inference_uuid}.mp4",
             "plate_numbers_with_info": plate_numbers_with_info,
         }
-
         return response
-    
-    def __download_video_from_s3(self):
+
+    def __upload_video_to_s3(self, inference_uuid):
         s3 = boto3.client("s3")
-        s3.download_file(
-            self.bucket_name, self.s3_download_path, self.disk_download_path
+        s3.upload_file(
+            f"{self.disk_upload_path}/{inference_uuid}.mp4",
+            self.bucket_name,
+            f"{self.s3_upload_path}/{inference_uuid}.mp4",
         )
 
-    def __upload_video_to_s3(self):
-        s3 = boto3.client("s3")
-        s3.upload_file(self.disk_upload_path, self.bucket_name, self.s3_upload_path)
 
-    def __store_plate_numbers_with_info(self, plate_numbers_with_info, storage_path):
-        data_to_store = {"plate_numbers": plate_numbers_with_info}
-        with open(storage_path, "w") as f:
-            json.dump(data_to_store, f, indent=4)
+if __name__ == "__main__":
+    inference_manager = InferenceManager()
+    inference_manager.detect_car_plates_yolov8("c6213328-da58-4cea-ab60-ac855da69fb6")
