@@ -140,8 +140,8 @@ class InferenceManager:
         out.release()
         if self.display_real_time:
             cv2.destroyAllWindows()
-        
-        self.__reencode_video_ffmpeg(output_video_path,output_video_path)
+
+        self.__reencode_video_ffmpeg(output_video_path, output_video_path)
 
         self.__upload_video_to_s3(inference_uuid)
         logger.info(
@@ -161,18 +161,27 @@ class InferenceManager:
             f"{self.s3_upload_path}/{inference_uuid}.mp4",
         )
         os.remove(output_video_path)
-    
+
     def __reencode_video_ffmpeg(self, input_path, output_path):
         import subprocess
+
         command = [
-            'ffmpeg',
-            '-i', input_path,
-            '-c:v', 'libx264',
-            '-crf', '23',
-            '-preset', 'fast',
-            '-c:a', 'aac',
-            '-b:a', '128k',
-            '-movflags', '+faststart',
-            output_path
+            "ffmpeg",
+            "-y",
+            "-i",
+            input_path,
+            "-c:v",
+            "libx264",
+            "-crf",
+            "23",
+            "-preset",
+            "fast",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "128k",
+            "-movflags",
+            "+faststart",
+            output_path,
         ]
         subprocess.run(command, check=True)

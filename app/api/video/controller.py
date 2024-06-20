@@ -5,14 +5,18 @@ import os
 
 ns = Namespace("video", description="video operations")
 
+get_parser = ns.parser()
+get_parser.add_argument("uuid", type=str, required=True, help="The inference UUID")
 
 @ns.route("/preprocessed")
 class PreprocessedVideo(Resource):
+    @ns.expect(get_parser)
     def get(self):
         """Serve the preprocessed video file from S3 with support for range requests"""
+        inference_uuid = request.args.get("uuid")
         range_header = request.headers.get("Range", None)
         bucket_name = os.getenv("BUCKET_NAME")
-        file_key = "mesos/input_video.mp4"
+        file_key = f"mesos/{inference_uuid}.mp4"
         file_content, content_type, content_range, content_length = get_s3_file(
             bucket_name, file_key, range_header
         )
