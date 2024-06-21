@@ -4,10 +4,8 @@ services:
   web:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: Dockerfile
     image: ihl-harbor.apps.hackathon.cnasg.dellcsc.com/aai-don/web:latest
-    volumes:
-      - ../:/app
     ports:
       - "5000:5000"
     depends_on:

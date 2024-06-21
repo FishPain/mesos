@@ -53,8 +53,9 @@
 
 <body>
     <div class="container">
-        <video id="videoPlayer" controls>
-            <source src="http://127.0.0.1:5000/v1/api/video/preprocessed" type="video/mp4">
+        <video id="videoPlayer" controls preload="metadata">
+            <source src="http://127.0.0.1:5000/v1/api/video/preprocessed?uuid=58615c07-674c-4c87-b2ba-624ff949d7fe"
+                type="video/mp4">
             Your browser does not support the video tag.
         </video>
         <div id="hotspots">
@@ -69,6 +70,15 @@
             videoPlayer.currentTime = time;
             videoPlayer.play();
         }
+
+        document.getElementById('videoPlayer').addEventListener('loadedmetadata', () => {
+            console.log('Metadata loaded');
+        });
+
+        document.getElementById('videoPlayer').addEventListener('seeked', () => {
+            console.log('Seek operation completed');
+            videoPlayer.play();
+        });
     </script>
 </body>
 

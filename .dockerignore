@@ -33,3 +33,6 @@ var
 htmlcov
 *.whl
 .venv
+.git
+.vscode
+*.md

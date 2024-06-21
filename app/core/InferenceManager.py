@@ -5,6 +5,7 @@ from paddleocr import PaddleOCR
 import boto3
 from app.constants import AppConstants as app_constants
 import logging
+import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -32,34 +33,82 @@ class InferenceManager:
             show_log=False,
         )
 
+    def reencode_video_ffmpeg(self, input_path, output_path):
+        command = [
+            'ffmpeg',
+            '-y',  # Automatically overwrite output files
+            '-i', input_path,
+            '-c:v', 'libx264',
+            '-crf', '23',
+            '-preset', 'fast',
+            '-movflags', '+faststart',
+            output_path
+        ]
+
+        # Check if the input video has an audio stream
+        has_audio = self.check_audio_stream(input_path)
+        if has_audio:
+            command.extend(['-c:a', 'aac', '-b:a', '128k'])
+        else:
+            logger.info(f"No audio stream found in {input_path}. Skipping audio encoding.")
+
+        try:
+            result = subprocess.run(command, check=True, capture_output=True, text=True)
+            logger.info(f"FFmpeg output: {result.stdout}")
+            
+        except subprocess.CalledProcessError as e:
+            logger.error(f"FFmpeg error: {e.stderr}")
+            if os.path.exists(output_path):
+                os.remove(output_path)
+            raise
+        else:
+            logger.info(f"Video re-encoded successfully")
+            if os.path.exists(input_path):
+                os.remove(input_path)
+        
+
+    def check_audio_stream(self, input_path):
+        """Check if the input video has an audio stream"""
+        command = [
+            'ffprobe',
+            '-v', 'error',
+            '-select_streams', 'a',
+            '-show_entries', 'stream=codec_type',
+            '-of', 'default=noprint_wrappers=1:nokey=1',
+            input_path
+        ]
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return bool(result.stdout)
+
     def detect_car_plates_yolov8(self, inference_uuid):
         logger.info(f"Processing video {inference_uuid}.mp4")
-        cap = cv2.VideoCapture(f"{self.disk_download_path}/{inference_uuid}.mp4")
+        input_video_path = f"{self.disk_download_path}/{inference_uuid}.mp4"
+        output_video_temp_path = f"{self.disk_upload_path}/{inference_uuid}_temp.mp4"
+        output_video_path = f"{self.disk_upload_path}/{inference_uuid}.mp4"
+
+        cap = cv2.VideoCapture(input_video_path)
         if not cap.isOpened():
-            logger.error(
-                f"Error: Could not open video file {self.disk_download_path}/{inference_uuid}.mp4"
-            )
+            logger.error(f"Error: Could not open video file {input_video_path}")
             return
 
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         source_fps = int(cap.get(cv2.CAP_PROP_FPS))
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        output_video_path = f"{self.disk_upload_path}/{inference_uuid}.mp4"
+        fourcc = cv2.VideoWriter_fourcc(
+            *"mp4v"
+        )  # Try "mp4v", "XVID", "avc1", or "H264"
+
         out = cv2.VideoWriter(
-            output_video_path,
+            output_video_temp_path,
             fourcc,
             source_fps,
             (frame_width, frame_height),
         )
 
         if not out.isOpened():
-            logger.error(
-                f"Error: Could not open output video file {self.disk_upload_path}/{inference_uuid}.mp4"
-            )
+            logger.error(f"Error: Could not open output video file {output_video_temp_path}")
             return
 
-        frame_info = []
         plate_numbers_with_info = []
         frame_count = 0
 
@@ -110,9 +159,6 @@ class InferenceManager:
                                 "confidence": conf,
                             }
                         )
-                        frame_info.append(
-                            {"frame_number": frame_count, "bounding_box": (x, y, w, h)}
-                        )
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
                         cv2.putText(
                             frame,
@@ -141,9 +187,11 @@ class InferenceManager:
         if self.display_real_time:
             cv2.destroyAllWindows()
 
-        self.__reencode_video_ffmpeg(output_video_path, output_video_path)
+        # Re-encode using FFmpeg
+        self.reencode_video_ffmpeg(output_video_temp_path, output_video_path)
 
-        self.__upload_video_to_s3(inference_uuid)
+        if self.upload_to_s3:
+            self.__upload_video_to_s3(inference_uuid)
         logger.info(
             f"Video uploaded to s3://{self.bucket_name}/{self.s3_upload_path}/{inference_uuid}.mp4"
         )
@@ -153,35 +201,11 @@ class InferenceManager:
         }
         return response
 
-    def __upload_video_to_s3(self, inference_uuid, output_video_path):
+    def __upload_video_to_s3(self, inference_uuid):
         s3 = boto3.client("s3")
         s3.upload_file(
-            output_video_path,
+            f"{self.disk_upload_path}/{inference_uuid}.mp4",
             self.bucket_name,
             f"{self.s3_upload_path}/{inference_uuid}.mp4",
         )
-        os.remove(output_video_path)
-
-    def __reencode_video_ffmpeg(self, input_path, output_path):
-        import subprocess
-
-        command = [
-            "ffmpeg",
-            "-y",
-            "-i",
-            input_path,
-            "-c:v",
-            "libx264",
-            "-crf",
-            "23",
-            "-preset",
-            "fast",
-            "-c:a",
-            "aac",
-            "-b:a",
-            "128k",
-            "-movflags",
-            "+faststart",
-            output_path,
-        ]
-        subprocess.run(command, check=True)
+        os.remove(f"{self.disk_upload_path}/{inference_uuid}.mp4")
