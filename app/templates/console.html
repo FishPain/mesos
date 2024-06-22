@@ -4,6 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
     <title>Video with Hotspots</title>
     <style>
         body {
@@ -53,9 +58,16 @@
 
 <body>
     <div class="container">
+        <div id="liveAlertPlaceholder"></div>
+        <form id="uploadForm">
+            <div class="input-group mb-3">
+                <input class="form-control" type="file" id="formFile" accept="video/*" required>
+                <button class="btn btn-outline-secondary" type="submit">Upload Video</button>
+            </div>
+        </form>
+        <h3 class="text-center">Annotated Video</h3>
         <video id="videoPlayer" controls preload="metadata">
-            <source src="http://127.0.0.1:5000/v1/api/video/preprocessed?uuid=58615c07-674c-4c87-b2ba-624ff949d7fe"
-                type="video/mp4">
+            <source id="videoSource" type="video/mp4">
             Your browser does not support the video tag.
         </video>
         <div id="hotspots">
@@ -78,6 +90,67 @@
         document.getElementById('videoPlayer').addEventListener('seeked', () => {
             console.log('Seek operation completed');
             videoPlayer.play();
+        });
+
+        // Dynamically set the video source
+        document.addEventListener('DOMContentLoaded', () => {
+            const videoSource = document.getElementById('videoSource');
+            const host = window.location.origin; // Gets the current origin (protocol, host, and port)
+
+            // Fetch the latest inference job's UUID
+            fetch(`${host}/v1/api/inference/latest`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data
+                        && data.latest_inference_result
+                        && data.latest_inference_result.inference_uuid
+                    ) {
+                        const uuid = data.latest_inference_result.inference_uuid;
+                        const videoUrl = `${host}/v1/api/video/preprocessed?uuid=${uuid}`;
+                        videoSource.src = videoUrl;
+
+                        // Load the video after setting the source
+                        document.getElementById('videoPlayer').load();
+                    } else {
+                        console.error('Invalid response structure:', data);
+                    }
+                })
+                .catch(error => console.error('Error fetching latest inference job:', error));
+        });
+
+        const alertPlaceholder = document.getElementById('liveAlertPlaceholder')
+        const appendAlert = (message, type) => {
+            const wrapper = document.createElement('div')
+            wrapper.innerHTML = [
+                `<div class="alert alert-${type} alert-dismissible" role="alert">`,
+                `   <div>${message}</div>`,
+                '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+                '</div>'
+            ].join('')
+
+            alertPlaceholder.append(wrapper)
+        }
+
+        // Handle form submission and file upload
+        document.getElementById('uploadForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formFile = document.getElementById('formFile').files[0];
+            if (formFile) {
+                const formData = new FormData();
+                formData.append('inference_data', formFile);
+                const host = window.location.origin;
+                fetch(`${host}/v1/api/inference`, {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('File uploaded successfully:', data);
+                        appendAlert("File uploaded successfully", "success");
+                        // Optionally, update the video source here after upload
+                    })
+                    .catch(error => console.error('Error uploading file:', error));
+            }
         });
     </script>
 </body>

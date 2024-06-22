@@ -3,6 +3,7 @@ from flask_restx import Namespace, Resource, fields
 from app.api.inference.handler import (
     start_inference_by_model_uuid,
     get_inference_by_uuid,
+    get_latest_inference_job,  # Assume this function is implemented in handler
 )
 from app.constants import AppConstants as app_constants
 import os
@@ -39,6 +40,15 @@ inference_result_model = ns.model(
         "inference_uuid": fields.String(description="Inference UUID"),
         "status": fields.String(description="Inference status"),
         "inference": fields.String(description="Inference result"),
+    },
+)
+
+latest_inference_result_model = ns.model(
+    "LatestInferenceResult",
+    {
+        "inference_uuid": fields.String(description="Latest Inference UUID"),
+        "status": fields.String(description="Latest Inference status"),
+        "inference": fields.String(description="Latest Inference result"),
     },
 )
 
@@ -93,3 +103,15 @@ class Inference(Resource):
             return "Inference job stopped successfully", 200
         else:
             return "Inference job not found", 400
+
+
+@ns.route("/latest")
+class InferenceData(Resource):  # Changed class name to inherit from Resource
+    @ns.response(200, "Success", latest_inference_result_model)
+    def get(self):
+        """Get the latest inference job result"""
+        resp = get_latest_inference_job()
+        return {
+            "message": "Latest inference result retrieved successfully",
+            "latest_inference_result": resp,
+        }, 200

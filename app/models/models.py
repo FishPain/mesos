@@ -1,5 +1,6 @@
 import uuid, os
 from datetime import datetime
+from celery import states
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
@@ -105,7 +106,16 @@ class InferenceModel(Base):
             .filter_by(inference_uuid=inference_uuid)
             .first()
         )
-    
+
+    @staticmethod
+    def get_latest_completed_record():
+        return (
+            session.query(InferenceModel)
+            .filter_by(inference_status=states.SUCCESS)
+            .order_by(InferenceModel.inference_datetime.desc())
+            .first()
+        )
+
     @staticmethod
     def update_inference_status(inference_uuid, inference_status):
         record = (
@@ -116,7 +126,7 @@ class InferenceModel(Base):
         record.inference_status = inference_status
         session.commit()
         return record.inference_uuid
-    
+
     def update_inference_output(inference_uuid, inference_output):
         record = (
             session.query(InferenceModel)
@@ -126,7 +136,7 @@ class InferenceModel(Base):
         record.inference_output = inference_output
         session.commit()
         return record.inference_uuid
-    
+
     @staticmethod
     def delete_record_by_uuid(inference_uuid):
         record = (

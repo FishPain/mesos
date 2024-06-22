@@ -19,7 +19,7 @@ class InferenceManager:
         self.storage_path = app_constants.DATA_UPLOAD_TEMP_DIR
         self.model_path = app_constants.MODEL_UPLOAD_TEMP_DIR
         self.display_real_time = False  # Set to True to enable real-time display
-        self.confidence_threshold = 0.5  # Confidence threshold for detections
+        self.confidence_threshold = os.environ.get('MODEL_CONF') or 0.5  # Confidence threshold for detections
         self.upload_to_s3 = True  # Set to True to upload video to S3
 
         os.makedirs(os.path.dirname(self.disk_download_path), exist_ok=True)

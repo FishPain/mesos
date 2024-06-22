@@ -23,3 +23,14 @@ def get_inference_by_uuid(uuid):
         "status": job_status,
         "inference_result": json.loads(inference_output) if inference_output else None,
     }
+
+
+def get_latest_inference_job():
+    record = InferenceModel.get_latest_completed_record()
+    if record is None:
+        return None
+    return {
+        "inference_uuid": record.inference_uuid,
+        "status": record.inference_status,
+        "inference": record.inference_output,
+    }

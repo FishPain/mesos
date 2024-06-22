@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 
 # check if the -m argument is passed
 if [ "$1" == "-m" ]; then

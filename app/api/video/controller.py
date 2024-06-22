@@ -37,18 +37,3 @@ class PreprocessedVideo(Resource):
             return response
         else:
             return {"message": "File not found"}, 404
-
-
-@ns.route("/postprocessed")
-class PostprocessedVideo(Resource):
-    def get(self):
-        """Serve the postprocessed video file from S3"""
-        file_content, content_type = get_s3_file(
-            "temp/videos/upload/postprocessed_annotated_video.mp4"
-        )
-        if file_content:
-            response = make_response(file_content)
-            response.headers.set("Content-Type", content_type)
-            return response
-        else:
-            return {"message": "File not found"}, 404
