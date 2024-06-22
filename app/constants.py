@@ -7,12 +7,13 @@ class AppConstants:
     SERVICE_NAME = "Harbourfront Python REST API Template"
     SERVICE_DESCRIPTION = "You can change this description in /app/constants.py"
     API_VERSION = "v1"
-    MODEL_UPLOAD_TEMP_DIR = "temp/models/upload/"
-    MODEL_DOWNLOAD_TEMP_DIR = "temp/models/download/"
-    VIDEO_UPLOAD_TEMP_DIR = "temp/videos/upload/annotated_video.mp4"
-    VIDEO_DOWNLOAD_TEMP_DIR = "temp/videos/download/video.mp4"
+    MODEL_UPLOAD_TEMP_DIR = "temp/models/upload/lpd.pt"
+    MODEL_DOWNLOAD_TEMP_DIR = "temp/models/download/lpd.pt"
+    VIDEO_UPLOAD_TEMP_DIR = "temp/videos/upload"
+    VIDEO_DOWNLOAD_TEMP_DIR = "temp/videos/download"
     DATA_UPLOAD_TEMP_DIR = "temp/data/upload/plate_numbers_with_info.json"
     DATA_DOWNLOAD_TEMP_DIR = "temp/data/download/"
+
 
 class JobConstants:
     UPLOAD_MODEL = "upload_model"
