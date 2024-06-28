@@ -53,27 +53,53 @@
         button:hover {
             background-color: #0056b3;
         }
+
+        #videoList {
+            max-height: 300px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <div id="liveAlertPlaceholder"></div>
-        <form id="uploadForm">
-            <div class="input-group mb-3">
-                <input class="form-control" type="file" id="formFile" accept="video/*" required>
-                <button class="btn btn-outline-secondary" type="submit">Upload Video</button>
+    <div id="liveAlertPlaceholder"></div>
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title text-center">Upload and View Videos</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <form id="uploadForm">
+                            <div class="input-group">
+                                <input class="form-control" type="file" id="formFile" accept="video/*" required>
+                                <button class="btn btn-outline-secondary" type="submit">Upload Video</button>
+                            </div>
+                        </form>
+                    </div>
+                    <h5 class="text-center">Available Videos</h5>
+                    <ul class="list-group" id="videoList"></ul>
+                </div>
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row mt-4">
+                                <div class="col-md-12">
+                                    <h3 class="text-center">Annotated Video</h3>
+                                    <video id="videoPlayer" controls preload="metadata">
+                                        <source id="videoSource" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                    <div id="hotspots">
+                                        <button onclick="jumpTo(10)">Jump to 00:10</button>
+                                        <button onclick="jumpTo(30)">Jump to 00:30</button>
+                                        <button onclick="jumpTo(60)">Jump to 01:00</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </form>
-        <h3 class="text-center">Annotated Video</h3>
-        <video id="videoPlayer" controls preload="metadata">
-            <source id="videoSource" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-        <div id="hotspots">
-            <button onclick="jumpTo(10)">Jump to 00:10</button>
-            <button onclick="jumpTo(30)">Jump to 00:30</button>
-            <button onclick="jumpTo(60)">Jump to 01:00</button>
         </div>
     </div>
     <script>
