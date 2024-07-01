@@ -115,6 +115,13 @@ class InferenceModel(Base):
             .order_by(InferenceModel.inference_datetime.desc())
             .first()
         )
+    
+    @staticmethod
+    def get_all_inference_job():
+        return (
+            session.query(InferenceModel)
+            .order_by(InferenceModel.inference_datetime.desc())
+        )
 
     @staticmethod
     def update_inference_status(inference_uuid, inference_status):

@@ -3,6 +3,7 @@ from app.models.models import InferenceModel
 from app.models.models import JobsModel
 from celery import states
 import json
+from datetime import datetime
 
 
 def start_inference_by_model_uuid(temp_uuid):
@@ -34,3 +35,21 @@ def get_latest_inference_job():
         "status": record.inference_status,
         "inference": record.inference_output,
     }
+
+
+def get_all_inference_job():
+    records = InferenceModel.get_all_inference_job()
+    if records is None:
+        return None
+    l = list()
+    for record in records:
+        l.append(
+            {
+                "inference_uuid": record.inference_uuid,
+                "status": record.inference_status,
+                "inference_datetime": record.inference_datetime.strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
+            }
+        )
+    return l
