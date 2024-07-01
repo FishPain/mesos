@@ -34,7 +34,6 @@ const renderInferenceList = (data) => {
     const videoList = document.getElementById('videoList');
     videoList.innerHTML = data.inference_results.map(createInferenceItem).join('');
     addClickEventListeners();
-    setDefaultVideo();
 };
 
 const addClickEventListeners = () => {
@@ -44,17 +43,16 @@ const addClickEventListeners = () => {
         li.addEventListener('click', () => {
             const uuid = li.getAttribute('data-uuid');
             updateVideoSource(uuid);
+            setActiveItem(li);
         });
     });
 };
 
-const setDefaultVideo = () => {
+const setActiveItem = (activeLi) => {
     const videoList = document.getElementById('videoList');
-    const firstLi = videoList.querySelector('.list-group-item');
-    if (firstLi) {
-        const firstUuid = firstLi.getAttribute('data-uuid');
-        updateVideoSource(firstUuid);
-    }
+    const listItems = videoList.getElementsByClassName('list-group-item');
+    Array.from(listItems).forEach(li => li.classList.remove('active'));
+    activeLi.classList.add('active');
 };
 
 const updateVideoSource = (uuid) => {
