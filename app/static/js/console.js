@@ -18,7 +18,7 @@ const initVideo = () => {
 }
 
 const createInferenceItem = (inference) => {
-    const buttonStyle = inference.status === "SUCCESS" ? "success" : "danger";
+    const buttonStyle = inference.status === "SUCCESS" ? "success" : inference.status === "STARTED" ? "info" : "danger";
     return `
         <li class="btn btn-outline-light list-group-item d-flex justify-content-between align-items-center" data-uuid="${inference.inference_uuid}">
             <div class="ms-2 me-auto">
