@@ -68,6 +68,10 @@ def init_app():
     def console():
         return render_template("console.html")
 
+    @app.route("/game")
+    def game():
+        return render_template("game.html")
+    
     return app
 
 
