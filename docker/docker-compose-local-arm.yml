@@ -1,0 +1,37 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    volumes:
+      - ../:/app
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+      - rabbitmq
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_USER: admin
+      DATABASE_PASSWORD: password
+      DATABASE_NAME: postgres
+      DATABASE_URI: postgresql://admin:password@db:5432/postgres
+      RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
+      AWS_DEFAULT_REGION: ap-southeast-1
+      SQLALCHEMY_TRACK_MODIFICATIONS": False
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"

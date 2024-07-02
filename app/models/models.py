@@ -38,7 +38,7 @@ class UserModel(Base):
 
         # if user exists, raise an exception
         if UserModel.get_user_uuid_by_email(dummy_email):
-            raise Exception("User already exists")
+            return None
 
         model = UserModel(
             username=dummy_username, email=dummy_email, password=dummy_pwd

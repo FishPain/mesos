@@ -79,11 +79,9 @@ class Inference(Resource):
         file = request.files.get("inference_data")
 
         if file:
-            os.makedirs(
-                os.path.dirname(app_constants.VIDEO_DOWNLOAD_TEMP_DIR), exist_ok=True
-            )
             temp_uuid = str(uuid.uuid4())
             temp_file_path = f"{app_constants.VIDEO_DOWNLOAD_TEMP_DIR}/{temp_uuid}.mp4"
+            os.makedirs(os.path.dirname(temp_file_path), exist_ok=True)
             file.save(temp_file_path)
             resp = start_inference_by_model_uuid(temp_uuid)
             response_data = {
@@ -116,6 +114,7 @@ class InferenceData(Resource):  # Changed class name to inherit from Resource
             "message": "Latest inference result retrieved successfully",
             "latest_inference_result": resp,
         }, 200
+
 
 @ns.route("/all")
 class InferenceData(Resource):  # Changed class name to inherit from Resource
