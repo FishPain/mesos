@@ -45,14 +45,22 @@ document.addEventListener('DOMContentLoaded', function () {
         var overlayBounds = overlay.getBoundingClientRect();
         var block3 = document.getElementById('block3');
         var block4 = document.getElementById('block4');
+        var block5 = document.getElementById('block5');
+        var block6 = document.getElementById('block6');
 
-        // 5vw to the right of the overlay for block3
+        // 5vw to the right of the overlay for block3 and block5
         block3.style.left = `${overlayBounds.right + 5 * (window.innerWidth / 100)}px`;
         block3.style.top = `${overlayBounds.top}px`;
 
-        // 5vw to the left of the overlay for block4, considering its own width
+        block5.style.left = `${overlayBounds.right + 10 * (window.innerWidth / 100)}px`;
+        block5.style.top = `${overlayBounds.top}px`;
+
+        // 5vw to the left of the overlay for block4 and block6, considering its own width
         block4.style.left = `${overlayBounds.left - block4.offsetWidth - 5 * (window.innerWidth / 100)}px`;
         block4.style.top = `${overlayBounds.top}px`;
+
+        block6.style.left = `${overlayBounds.left - block6.offsetWidth - 10 * (window.innerWidth / 100)}px`;
+        block6.style.top = `${overlayBounds.top}px`;
     }
 
     function handleMouseDown(e) {
