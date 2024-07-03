@@ -127,7 +127,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateERP(lane, distance) {
-        document.getElementById('distance').innerText = distance / 2;
+        distance = distance / 2
+        colour = distance > 100 ? "orange" : distance > 0 ? "red" : "green"
+        var distanceText = distance > 0 ? distance + "m" : "Passed"
+        document.getElementById('distance').innerText = distanceText;
+        document.getElementById('distance').style.color = colour;
         document.getElementById('lane').innerText = lane;
         document.querySelectorAll('.arrows i').forEach(arrow => {
             arrow.classList.remove('active');
