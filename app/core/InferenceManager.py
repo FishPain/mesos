@@ -19,7 +19,9 @@ class InferenceManager:
         self.storage_path = app_constants.DATA_UPLOAD_TEMP_DIR
         self.model_path = app_constants.MODEL_UPLOAD_TEMP_DIR
         self.display_real_time = False  # Set to True to enable real-time display
-        self.confidence_threshold = os.environ.get('MODEL_CONF') or 0.5  # Confidence threshold for detections
+        self.confidence_threshold = (
+            os.environ.get("MODEL_CONF") or 0.5
+        )  # Confidence threshold for detections
         self.upload_to_s3 = True  # Set to True to upload video to S3
 
         os.makedirs(os.path.dirname(self.disk_download_path), exist_ok=True)
@@ -35,27 +37,34 @@ class InferenceManager:
 
     def reencode_video_ffmpeg(self, input_path, output_path):
         command = [
-            'ffmpeg',
-            '-y',  # Automatically overwrite output files
-            '-i', input_path,
-            '-c:v', 'libx264',
-            '-crf', '23',
-            '-preset', 'fast',
-            '-movflags', '+faststart',
-            output_path
+            "ffmpeg",
+            "-y",  # Automatically overwrite output files
+            "-i",
+            input_path,
+            "-c:v",
+            "libx264",
+            "-crf",
+            "23",
+            "-preset",
+            "fast",
+            "-movflags",
+            "+faststart",
+            output_path,
         ]
 
         # Check if the input video has an audio stream
         has_audio = self.check_audio_stream(input_path)
         if has_audio:
-            command.extend(['-c:a', 'aac', '-b:a', '128k'])
+            command.extend(["-c:a", "aac", "-b:a", "128k"])
         else:
-            logger.info(f"No audio stream found in {input_path}. Skipping audio encoding.")
+            logger.info(
+                f"No audio stream found in {input_path}. Skipping audio encoding."
+            )
 
         try:
             result = subprocess.run(command, check=True, capture_output=True, text=True)
             logger.info(f"FFmpeg output: {result.stdout}")
-            
+
         except subprocess.CalledProcessError as e:
             logger.error(f"FFmpeg error: {e.stderr}")
             if os.path.exists(output_path):
@@ -65,22 +74,26 @@ class InferenceManager:
             logger.info(f"Video re-encoded successfully")
             if os.path.exists(input_path):
                 os.remove(input_path)
-        
 
     def check_audio_stream(self, input_path):
         """Check if the input video has an audio stream"""
         command = [
-            'ffprobe',
-            '-v', 'error',
-            '-select_streams', 'a',
-            '-show_entries', 'stream=codec_type',
-            '-of', 'default=noprint_wrappers=1:nokey=1',
-            input_path
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "a",
+            "-show_entries",
+            "stream=codec_type",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            input_path,
         ]
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return bool(result.stdout)
 
     def detect_car_plates_yolov8(self, inference_uuid):
+        os.makedirs(os.path.dirname(self.disk_upload_path), exist_ok=True)
         logger.info(f"Processing video {inference_uuid}.mp4")
         input_video_path = f"{self.disk_download_path}/{inference_uuid}.mp4"
         output_video_temp_path = f"{self.disk_upload_path}/{inference_uuid}_temp.mp4"
@@ -106,7 +119,9 @@ class InferenceManager:
         )
 
         if not out.isOpened():
-            logger.error(f"Error: Could not open output video file {output_video_temp_path}")
+            logger.error(
+                f"Error: Could not open output video file {output_video_temp_path}"
+            )
             return
 
         plate_numbers_with_info = []
