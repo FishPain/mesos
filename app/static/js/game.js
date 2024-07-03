@@ -50,17 +50,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // 5vw to the right of the overlay for block3 and block5
         block3.style.left = `${overlayBounds.right + 5 * (window.innerWidth / 100)}px`;
-        block3.style.top = `${overlayBounds.top}px`;
+        block3.style.top = `${overlayBounds.top + 5 * (window.innerWidth / 100)}px`;
 
-        block5.style.left = `${overlayBounds.right + 10 * (window.innerWidth / 100)}px`;
-        block5.style.top = `${overlayBounds.top}px`;
+        block5.style.left = `${overlayBounds.right + 5 * (window.innerWidth / 100)}px`;
+        block5.style.top = `${overlayBounds.top + 15 * (window.innerWidth / 100)}px`;
 
         // 5vw to the left of the overlay for block4 and block6, considering its own width
         block4.style.left = `${overlayBounds.left - block4.offsetWidth - 5 * (window.innerWidth / 100)}px`;
-        block4.style.top = `${overlayBounds.top}px`;
+        block4.style.top = `${overlayBounds.top - block4.offsetWidth - 15 * (window.innerWidth / 100)}px`;
 
-        block6.style.left = `${overlayBounds.left - block6.offsetWidth - 10 * (window.innerWidth / 100)}px`;
-        block6.style.top = `${overlayBounds.top}px`;
+        block6.style.left = `${overlayBounds.left - block6.offsetWidth - 5 * (window.innerWidth / 100)}px`;
+        block6.style.top = `${overlayBounds.top - block6.offsetWidth - 5 * (window.innerWidth / 100)}px`;
     }
 
     function handleMouseDown(e) {
