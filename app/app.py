@@ -71,7 +71,10 @@ def init_app():
     @app.route("/game")
     def game():
         return render_template("game.html")
-    
+
+    os.makedirs(os.path.dirname(app_constants.VIDEO_DOWNLOAD_TEMP_DIR), exist_ok=True)
+    os.makedirs(os.path.dirname(app_constants.VIDEO_UPLOAD_TEMP_DIR), exist_ok=True)
+
     return app
 
 

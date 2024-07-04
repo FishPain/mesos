@@ -16,18 +16,12 @@ class InferenceManager:
         self.s3_upload_path = "mesos"
         self.disk_download_path = app_constants.VIDEO_DOWNLOAD_TEMP_DIR
         self.disk_upload_path = app_constants.VIDEO_UPLOAD_TEMP_DIR
-        self.storage_path = app_constants.DATA_UPLOAD_TEMP_DIR
         self.model_path = app_constants.MODEL_UPLOAD_TEMP_DIR
         self.display_real_time = False  # Set to True to enable real-time display
         self.confidence_threshold = (
             os.environ.get("MODEL_CONF") or 0.5
         )  # Confidence threshold for detections
         self.upload_to_s3 = True  # Set to True to upload video to S3
-
-        os.makedirs(os.path.dirname(self.disk_download_path), exist_ok=True)
-        os.makedirs(os.path.dirname(self.disk_upload_path), exist_ok=True)
-        os.makedirs(os.path.dirname(self.storage_path), exist_ok=True)
-
         self.model = YOLO(self.model_path)
         self.ocr = PaddleOCR(
             use_angle_cls=True,
@@ -93,7 +87,6 @@ class InferenceManager:
         return bool(result.stdout)
 
     def detect_car_plates_yolov8(self, inference_uuid):
-        os.makedirs(os.path.dirname(self.disk_upload_path), exist_ok=True)
         logger.info(f"Processing video {inference_uuid}.mp4")
         input_video_path = f"{self.disk_download_path}/{inference_uuid}.mp4"
         output_video_temp_path = f"{self.disk_upload_path}/{inference_uuid}_temp.mp4"
