@@ -92,6 +92,9 @@ class InferenceManager:
         output_video_temp_path = f"{self.disk_upload_path}/{inference_uuid}_temp.mp4"
         output_video_path = f"{self.disk_upload_path}/{inference_uuid}.mp4"
 
+        os.makedirs(os.path.dirname(input_video_path), exist_ok=True)
+        os.makedirs(os.path.dirname(output_video_temp_path), exist_ok=True)
+
         cap = cv2.VideoCapture(input_video_path)
         if not cap.isOpened():
             logger.error(f"Error: Could not open video file {input_video_path}")
