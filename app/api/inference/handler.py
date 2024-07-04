@@ -53,3 +53,8 @@ def get_all_inference_job():
             }
         )
     return l
+
+
+def delete_inference(inference_uuid):
+    uuid = InferenceModel.delete_record_by_uuid(inference_uuid)
+    return {"uuid": uuid}

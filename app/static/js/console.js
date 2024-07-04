@@ -1,4 +1,4 @@
-const host = window.location.origin; // Gets the current origin (protocol, host, and port)
+const host = window.location.origin;
 
 const jumpTo = (time) => {
   const videoPlayer = document.getElementById("videoPlayer");
@@ -27,14 +27,15 @@ const createInferenceItem = (inference) => {
       ? "info"
       : "danger";
   return `
-        <li class="btn btn-outline-light list-group-item d-flex justify-content-between align-items-center" data-uuid="${inference.inference_uuid}">
-            <div class="ms-2 me-auto">
-                <div class="fw-bold">Date: ${inference.inference_datetime}</div>
-                Inference ID: ${inference.inference_uuid}
-            </div>
-            <span class="badge text-bg-${buttonStyle} rounded-pill">${inference.status}</span>
-        </li>
-    `;
+      <li class="btn btn-outline-light list-group-item d-flex justify-content-between align-items-center" data-uuid="${inference.inference_uuid}">
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="deleteVideo('${inference.inference_uuid}')"></button>
+          <div class="ms-2 me-auto">
+              <div class="fw-bold">Date: ${inference.inference_datetime}</div>
+              Inference ID: ${inference.inference_uuid}
+          </div>
+          <span class="badge text-bg-${buttonStyle} rounded-pill">${inference.status}</span>
+      </li>
+  `;
 };
 
 const renderInferenceList = (data) => {
@@ -71,6 +72,15 @@ const updateVideoSource = (uuid) => {
   document.getElementById("videoPlayer").load();
 };
 
+function deleteVideo(uuid) {
+  fetch(`${host}/v1/api/inference?uuid=${uuid}`, { method: "DELETE" })
+    .then((response) => response.json())
+    .then((data) => {
+      document.querySelector(`li[data-uuid="${uuid}"]`).remove();
+    })
+    .catch((error) => console.error("Error deleting video:", error));
+}
+
 const initVideoList = () => {
   fetch(`${host}/v1/api/inference/all`)
     .then((response) => response.json())
@@ -91,13 +101,12 @@ const generateAlert = () => {
     wrapper.innerHTML = [
       `<div class="alert alert-${type} alert-dismissible" role="alert">`,
       `   <div>${message}</div>`,
-      '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+      `   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`,
       "</div>",
     ].join("");
 
     alertPlaceholder.append(wrapper);
   };
-  // Handle form submission and file upload
   document
     .getElementById("uploadForm")
     .addEventListener("submit", function (event) {

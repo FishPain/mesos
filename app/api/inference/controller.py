@@ -5,6 +5,7 @@ from app.api.inference.handler import (
     get_inference_by_uuid,
     get_latest_inference_job,
     get_all_inference_job,
+    delete_inference,
 )
 from app.constants import AppConstants as app_constants
 import os
@@ -97,10 +98,15 @@ class Inference(Resource):
         """Delete the inference based on inference id and returns 200 if success"""
         inference_uuid = request.args.get("uuid")
 
-        if inference_uuid:
-            # Implement model deletion logic here
-            return "Inference job stopped successfully", 200
-        else:
+        try:
+            resp = delete_inference(inference_uuid)
+            response_data = {
+                "message": "Inference job deleted successfully",
+                "body": resp,
+            }
+            return response_data, 200
+        except Exception as e:
+
             return "Inference job not found", 400
 
 
