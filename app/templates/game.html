@@ -1,189 +1,285 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
     <title>Draggable Overlay</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: flex-end;
-            align-items: flex-start;
-            height: 100vh;
-            width: 100vw;
-        }
+      body {
+        margin: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-start;
+        height: 100vh;
+        width: 100vw;
+      }
 
-        #overlay,
-        .draggable {
-            width: 5vw;
-            height: 5vw;
-            background: transparent;
-            position: absolute;
-            touch-action: none;
-            background-image: url("static/assets/ambulance.svg");
-            background-size: contain;
-            background-repeat: no-repeat;
-        }
+      .top {
+        flex: 5;
+        border-radius: 10px 10px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #2b2c2a;
+        padding: 0px 1vw 0px 1vw;
+      }
 
-        .block {
-            width: 35vw;
-            height: 100%;
-            position: absolute;
-            background: green;
-        }
+      .bottom {
+        flex: 1;
+        border-radius: 0 0 10px 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #141414;
+        padding: 20px;
+        box-sizing: border-box; /* Ensure padding is included in the height */
+      }
 
-        #block1 {
-            left: 0;
-        }
+      .alert {
+        flex: 2;
+        font-size: 1.5vw;
+        text-align: left;
+        font-weight: bold;
+        line-height: 2vw;
+        padding: 0 10px;
+        margin: 0;
+        white-space: normal; /* Allow text to wrap */
+      }
 
-        #block2 {
-            right: 0;
-        }
+      .vehicle {
+        display: flex;
+        align-items: center;
+      }
 
-        .car {
-            width: 5vw;
-            height: 5vw;
-            position: absolute;
-            background: transparent;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-image: url("static/assets/car.svg");
-        }
+      .vehicle img {
+        width: 10vw; /* Make the image fully responsive within the container */
+        height: auto; /* Maintain aspect ratio */
+      }
 
-        .taxi {
-            background-image: url("static/assets/taxi.svg");
-        }
+      #overlay,
+      .draggable {
+        width: 5vw;
+        height: 5vw;
+        background: transparent;
+        position: absolute;
+        touch-action: none;
+        background-image: url("static/assets/ambulance.svg");
+        background-size: contain;
+        background-repeat: no-repeat;
+      }
 
-        #road {
-            width: 30vw;
-            height: 100%;
-            position: absolute;
-            left: calc(35vw);
-            background-image: url("static/assets/road.png");
-            background-size: cover;
-            background-position: center;
-        }
+      .block {
+        width: 35vw;
+        height: 100%;
+        position: absolute;
+        background: green;
+      }
 
+      #block1 {
+        left: 0;
+      }
+
+      #block2 {
+        right: 0;
+      }
+
+      .car {
+        width: 5vw;
+        height: 5vw;
+        position: absolute;
+        background: transparent;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-image: url("static/assets/car.svg");
+      }
+
+      .taxi {
+        background-image: url("static/assets/taxi.svg");
+      }
+
+      #road {
+        width: 30vw;
+        height: 100%;
+        position: absolute;
+        left: calc(35vw);
+        background-image: url("static/assets/road.png");
+        background-size: cover;
+        background-position: center;
+      }
+
+      .container {
+        text-align: center;
+        background-color: #444;
+        color: white;
+        padding: 10px;
+        border-radius: 20px;
+        box-sizing: border-box;
+        flex-direction: column;
+        display: flex;
+        width: 30vw; /* Control the width based on the viewport width */
+        aspect-ratio: 2 / 1.2; /* Maintain the 2:1 aspect ratio */
+        margin-top: 2vh;
+        margin-right: 2vw;
+        z-index: 99;
+        max-width: 600px;
+        position: absolute;
+        top: 0;
+        right: 0;
+        overflow: hidden; /* Ensures nothing overflows this container */
+      }
+
+      .alert {
+        font-size: 1.5em;
+      }
+
+      .icon {
+        margin-top: 1vh;
+      }
+
+      .lane {
+        font-size: 1em;
+        margin-top: 1vh;
+        margin-bottom: 1vh;
+      }
+
+      .vehicle img {
+        flex: 1;
+        width: 10vw; /* Make the image fully responsive within the container */
+        height: auto; /* Maintain aspect ratio */
+      }
+
+      .arrows {
+        margin-top: 1vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end; /* Aligns children to the bottom */
+        color: #349a04;
+        font-size: 3vw;
+      }
+
+      .arrows i,
+      .arrows span {
+        margin: 0 5px; /* Space between arrows and dividers */
+      }
+
+      .arrows span.divider {
+        width: 2px; /* Width of the divider line */
+        height: 20%; /* Half the height of the container for aesthetic balance */
+        background-color: #349a04; /* Color of the divider */
+        align-self: flex-end; /* Aligns the divider to the bottom */
+      }
+
+      .arrows svg {
+        width: 5vw; /* Adjust width relative to viewport width */
+        height: 5vw; /* Adjust height relative to viewport width to maintain aspect ratio */
+        stroke-width: 0.4vw; /* Adjust stroke width relative to viewport width */
+        margin: 0 1vw; /* Adds horizontal space between icons based on viewport width */
+      }
+
+      .lane {
+        font-size: 1.5em;
+        margin-top: 20px;
+        margin-bottom: 20px;
+      }
+
+      .active {
+        color: orange;
+      }
+
+      /* Media Queries for smaller screens */
+      @media (max-width: 600px) {
         .container {
-            text-align: center;
-            background-color: #1f1f1f;
-            color: white;
-            padding: 1vw;
-            border-radius: 10px;
-            width: 20vw;
-            margin-top: 2vh;
-            margin-right: 2vw;
-            z-index: 99;
-            max-width: 600px;
-            position: absolute;
-            top: 0;
-            right: 0;
+          width: 80vw;
+          padding: 2vw;
+          margin-top: 2vh;
+          margin-right: 0;
+          left: 50%;
+          transform: translateX(-50%);
         }
 
         .alert {
-            font-size: 1.5em;
-        }
-
-        .icon {
-            margin-top: 1vh;
-        }
-
-        .arrows {
-            margin-top: 1vh;
-            display: flex;
-            justify-content: center;
+          font-size: 1em;
         }
 
         .lane {
-            font-size: 1em;
-            margin-top: 1vh;
-            margin-bottom: 1vh;
+          font-size: 0.8em;
         }
 
         .arrows i,
         .fa-ambulance {
-            font-size: 2em;
-            margin: 0 0.5vw;
+          font-size: 1.5em;
         }
 
-        .active {
-            color: orange;
+        .lane {
+          font-size: 0.8em;
         }
 
-        /* Media Queries for smaller screens */
-        @media (max-width: 600px) {
-            .container {
-                width: 80vw;
-                padding: 2vw;
-                margin-top: 2vh;
-                margin-right: 0;
-                left: 50%;
-                transform: translateX(-50%);
-            }
-
-            .alert {
-                font-size: 1.2em;
-            }
-
-            .lane {
-                font-size: 0.8em;
-            }
-
-            .arrows i,
-            .fa-ambulance {
-                font-size: 1.5em;
-            }
-
-            #road {
-                width: 100vw;
-                height: 100%;
-                position: absolute;
-                left: 0;
-                background-image: url("static/assets/road.png");
-                background-size: contain;
-                background-position: center;
-            }
-
-            .car,
-            #overlay {
-                width: 10vw;
-                height: 10vw;
-            }
-
-            .block {
-                width: 10vw;
-                height: 100%;
-            }
-
-            #block1 {
-                left: 0;
-            }
-
-            #block2 {
-                right: 0;
-            }
+        #road {
+          width: 100vw;
+          height: 100%;
+          position: absolute;
+          left: 0;
+          background-image: url("static/assets/road.png");
+          background-size: contain;
+          background-position: center;
         }
+
+        .car,
+        #overlay {
+          width: 10vw;
+          height: 10vw;
+        }
+
+        .block {
+          width: 10vw;
+          height: 100%;
+        }
+
+        #block1 {
+          left: 0;
+        }
+
+        #block2 {
+          right: 0;
+        }
+
+        .vehicle img {
+          width: 20vw; /* Increase the size of the ambulance image */
+        }
+      }
     </style>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <div class="container">
-        <div class="alert">Emergency Vehicle Approaching in <span id="distance"></span></div>
-        <div class="lane">Please give way on Lane <span id="lane"></span></div>
-        <div>
-            <i class="fas fa-ambulance"></i>
+      <div class="top">
+        <div class="alert">
+          <p>Emergency Vehicle</p>
+          <p>Incoming <span id="distance"></span></p>
+          <p>Lane <span id="lane"></span></p>
         </div>
+        <div class="vehicle">
+          <img src="static/assets/amb.png" alt="Ambulance" />
+        </div>
+      </div>
+      <div class="bottom">
         <div class="arrows">
-            <i class="fas fa-arrow-up" id="1"></i>
-            <i class="fas fa-arrow-up" id="2"></i>
-            <i class="fas fa-arrow-up" id="3"></i>
+          <span class="divider"></span>
+          <i class="fa-solid fa-arrow-up-long" id="1"></i>
+          <span class="divider"></span>
+          <i class="fa-solid fa-arrow-up-long" id="2"></i>
+          <span class="divider"></span>
+          <i class="fa-solid fa-arrow-up-long" id="3"></i>
+          <span class="divider"></span>
         </div>
+      </div>
     </div>
 
     <div id="road"></div>
@@ -197,6 +293,5 @@
     <div id="block1" class="block"></div>
     <div id="block2" class="block"></div>
     <script src="static/js/game.js"></script>
-</body>
-
+  </body>
 </html>
